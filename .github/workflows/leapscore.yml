@@ -1,0 +1,30 @@
+name: LeapScore consumer
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: scan
+        uses: open-legacyleap/leapscore@v1
+        with:
+          path: .
+          out_dir: leapscore-report
+      - if: always()
+        run: |
+          node -e "const r=require('./leapscore-report/report.json'); console.log('CONSUMER '+JSON.stringify({engine:r.meta.engine_version,score:r.meta.score,tier:r.meta.tier,fingerprint:r.meta.score_fingerprint,status:r.meta.status}))"
+      - if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: leapscore-report
+          path: leapscore-report/
